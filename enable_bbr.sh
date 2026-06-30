@@ -415,7 +415,7 @@ report_unmanaged_duplicates() {
   [[ "$file" != "$CONF_FILE" ]] || return 0
 
   if grep -Eq "^[[:space:]]*(${key_pattern})[[:space:]]*=" "$file"; then
-    log "提示: 发现非 /etc 重复项，本脚本不直接修改包管理目录: $file"
+    log "提示: 系统默认目录中存在同名项，sysctl --system 会先显示它，随后由 $CONF_FILE 覆盖: $file"
   fi
 }
 
@@ -527,15 +527,13 @@ apply_config() {
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     log "[dry-run] 将执行: sysctl --system"
-    log "[dry-run] 将执行: sysctl -p $CONF_FILE"
     return 0
   fi
 
   if ! sysctl --system; then
     log "警告: sysctl --system 返回失败，继续单独应用本脚本配置"
+    sysctl -p "$CONF_FILE"
   fi
-
-  sysctl -p "$CONF_FILE"
 }
 
 verify_config() {
